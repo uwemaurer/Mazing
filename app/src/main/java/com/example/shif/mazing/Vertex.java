@@ -6,20 +6,18 @@ package com.example.shif.mazing;
  */
 public class Vertex {
 
-    int key;
+    final int key;
     Integer[] edges;
     // Whether or not the vertex was visited by the MazeBuilder
     boolean visited;
     int distance;
     Vertex previous;
     MainActivity.Color color;
-    final int INFINITY = 10000;
-
 
     public Vertex(int key) {
         this.key = key;
         this.visited = false;
-        this.distance = INFINITY;
+        this.distance = Integer.MAX_VALUE;
         this.previous = null;
         this.color = MainActivity.Color.WHITE;
     }
@@ -28,12 +26,10 @@ public class Vertex {
         this.key = key;
         this.edges = edges;
         this.visited = false;
-        this.distance = INFINITY;
+        this.distance = Integer.MAX_VALUE;
         this.previous = null;
         this.color = MainActivity.Color.WHITE;
     }
-
-    public void setKey(int key) { this.key = key; }
 
     public void setEdges(Integer[] edges) { this.edges = edges; }
 

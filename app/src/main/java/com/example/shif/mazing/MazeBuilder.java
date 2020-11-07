@@ -1,45 +1,44 @@
 package com.example.shif.mazing;
 
 /**
- * Helper for building a maze from a fully-connected graph representing a full grid.
- * Contains two methods:
- * carveWay changes the visual representation of the maze.
- * It breaks down vertical and horizontal walls in the mazeView,
- * using a depth-first walk in the graph.
- * removeEdges changes the graph representation of the maze.
- * It disconnects edges in the graph representation of the maze,
- * according to the state of the walls after carveWay was called.
- * An effort to combine the two functions resulted in a less readable code.
+ * Helper for building a maze from a fully-connected graph representing a full grid. Contains two
+ * methods: carveWay changes the visual representation of the maze. It breaks down vertical and
+ * horizontal walls in the mazeView, using a depth-first walk in the graph. removeEdges changes the
+ * graph representation of the maze. It disconnects edges in the graph representation of the maze,
+ * according to the state of the walls after carveWay was called. An effort to combine the two
+ * functions resulted in a less readable code.
  */
-public class MazeBuilder {
+public final class MazeBuilder {
+    private MazeBuilder() {
+    }
 
-    public static void carveWay(Graph graph, Vertex v, MazeView mazeView) {
-        int n = (int) Math.sqrt(graph.size);
+    public static void carveWay(Graph graph, Vertex start, MazeView mazeView) {
+        int columns = graph.columns;
 
-        for (int i = 0; i < v.edges.length; i++) {
+        for (int i = 0; i < start.edges.length; i++) {
 
             // If the current neighbor was not visited yet,
             // break the wall between the current vertex and the neighbor
             // and then recursively carve way from the neighbor to its neighbors
-
-            if (v.edges[i] != null && !graph.V[v.edges[i]].visited) {
+            Vertex vertex;
+            if (start.edges[i] != null && !(vertex = graph.V[start.edges[i]]).visited) {
                 // Find which is the larger-key vertex
                 Vertex biggerVertex;
                 Vertex smallerVertex;
-                if (v.key >= graph.V[v.edges[i]].key) {
-                    biggerVertex = v;
-                    smallerVertex = graph.V[v.edges[i]];
+                if (start.key >= vertex.key) {
+                    biggerVertex = start;
+                    smallerVertex = vertex;
                 } else {
-                    biggerVertex = graph.V[v.edges[i]];
-                    smallerVertex = v;
+                    biggerVertex = vertex;
+                    smallerVertex = start;
                 }
 
-                int row = biggerVertex.key / n;
-                int column = biggerVertex.key % n;
+                int row = biggerVertex.key / columns;
+                int column = biggerVertex.key % columns;
 
                 // Check if wall is vertical or horizontal
                 // and turn matching wall to false
-                if (biggerVertex.key / n == smallerVertex.key / n) {
+                if (biggerVertex.key / columns == smallerVertex.key / columns) {
                     // vertical wall
                     mazeView.verticalLines[row][column] = false;
                 } else {
@@ -48,10 +47,10 @@ public class MazeBuilder {
                 }
 
                 // Change visited to true
-                graph.V[v.edges[i]].setVisitedToTrue();
+                vertex.setVisitedToTrue();
 
                 // Move on recursively
-                carveWay(graph, graph.V[v.edges[i]], mazeView);
+                carveWay(graph, vertex, mazeView);
             }
         }
         // All neighbors were visited, move back in recursion
@@ -64,20 +63,23 @@ public class MazeBuilder {
         for (int linesRow = 0; linesRow < mazeView.verticalLines.length; linesRow++) {
 
             // Don't iterate over the first and last vertical lines as they are the maze's borders
-            for (int linesColumn = 1; linesColumn < mazeView.verticalLines[0].length - 1; linesColumn++) {
+            for (int linesColumn = 1; linesColumn < mazeView.verticalLines[0].length - 1;
+                linesColumn++) {
                 // If there is no line, remove the edge
-                if (mazeView.verticalLines[linesRow][linesColumn] == false) {
+                if (!mazeView.verticalLines[linesRow][linesColumn]) {
 
                     Integer[] currentEdges = mazeView.graph.V[counter].edges;
                     Integer[] currentEdgesNextVertex = mazeView.graph.V[counter + 1].edges;
 
                     // Remove the relevant edge from current edges arrays
-                    Integer currentVertexKey = (linesRow * mazeView.mazeSize) + (linesColumn - 1);
+                    int currentVertexKey = (linesRow * mazeView.graph.columns) + (linesColumn - 1);
 
                     Integer neighborVertexKey = currentVertexKey + 1;
 
-                    Integer[] newEdgesV = MainActivity.removeValueFromArray(currentEdges, neighborVertexKey);
-                    Integer[] newEdgesNeighbor = MainActivity.removeValueFromArray(currentEdgesNextVertex, currentVertexKey);
+                    Integer[] newEdgesV = MainActivity.removeValueFromArray(currentEdges,
+                        neighborVertexKey);
+                    Integer[] newEdgesNeighbor = MainActivity.removeValueFromArray(
+                        currentEdgesNextVertex, currentVertexKey);
 
                     mazeView.graph.V[counter].edges = newEdgesV;
                     mazeView.graph.V[counter + 1].edges = newEdgesNeighbor;
@@ -94,25 +96,29 @@ public class MazeBuilder {
         // Don't iterate over the first and last horizontal lines as they are the maze's borders
         for (int linesRow = 1; linesRow < mazeView.horizontalLines.length - 1; linesRow++) {
 
-            for (int linesColumn = 0; linesColumn < mazeView.horizontalLines[0].length; linesColumn++) {
+            for (int linesColumn = 0; linesColumn < mazeView.horizontalLines[0].length;
+                linesColumn++) {
 
                 // If there is not line, remove the edge
-                if (mazeView.horizontalLines[linesRow][linesColumn] == false) {
+                if (!mazeView.horizontalLines[linesRow][linesColumn]) {
 
                     Integer[] currentEdges = mazeView.graph.V[counter].edges;
-                    Integer[] currentEdgesNextVertex = mazeView.graph.V[counter + mazeView.mazeSize].edges;
+                    Integer[] currentEdgesNextVertex =
+                        mazeView.graph.V[counter + mazeView.graph.columns].edges;
 
                     // Remove the relevant edge from current edges arrays
-                    Integer currentVertexKey = ((linesRow - 1) * mazeView.mazeSize) + (linesColumn);
+                    int currentVertexKey = ((linesRow - 1) * mazeView.graph.columns) + linesColumn;
 
-                    Integer neighborVertexKey = currentVertexKey + mazeView.mazeSize;
+                    Integer neighborVertexKey = currentVertexKey + mazeView.graph.columns;
 
-                    Integer[] newEdgesV = MainActivity.removeValueFromArray(currentEdges, neighborVertexKey);
+                    Integer[] newEdgesV = MainActivity.removeValueFromArray(currentEdges,
+                        neighborVertexKey);
 
-                    Integer[] newEdgesNeighbor = MainActivity.removeValueFromArray(currentEdgesNextVertex, currentVertexKey);
+                    Integer[] newEdgesNeighbor = MainActivity.removeValueFromArray(
+                        currentEdgesNextVertex, currentVertexKey);
 
                     mazeView.graph.V[counter].edges = newEdgesV;
-                    mazeView.graph.V[counter + mazeView.mazeSize].edges = newEdgesNeighbor;
+                    mazeView.graph.V[counter + mazeView.graph.columns].edges = newEdgesNeighbor;
                 }
                 counter++;
             }

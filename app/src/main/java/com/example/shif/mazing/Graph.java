@@ -3,82 +3,75 @@ package com.example.shif.mazing;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
- * The graph representation of the maze, using an adjacency list.
- * The constructor creates a graph where each vertex is a cell in a grid,
- * and each vertex (cell) has edges to all of its neighboring vertices (cells).
- * Method negateGraph creates a negative of an existing graph:
- * considering each vertex represents a cell in a grid,
- * for each vertex (cell) the method adds edges to neighboring cells (vertices) that are not connected
- * and removes existing edges.
+ * The graph representation of the maze, using an adjacency list. The constructor creates a graph
+ * where each vertex is a cell in a grid, and each vertex (cell) has edges to all of its neighboring
+ * vertices (cells). Method negateGraph creates a negative of an existing graph: considering each
+ * vertex represents a cell in a grid, for each vertex (cell) the method adds edges to neighboring
+ * cells (vertices) that are not connected and removes existing edges.
  */
 public class Graph {
+    int rows, columns;
 
-    int size;
     Vertex[] V;
 
-    public Graph(int n) {
-        this.size = n*n;
+    public Graph(int rows, int columns) {
+        this.columns = columns;
+        this.rows = rows;
+        int size = rows * columns;
         this.V = new Vertex[size];
-        int counter = 0;
+        int index = 0;
 
-        for (int r = 0; r < n; r++) {
-            for (int c = 0; c < n; c++) {
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < columns; c++) {
+                Vertex v = V[index] = new Vertex(index);
+                index++;
 
-                V[counter] = new Vertex(counter);
-
-                boolean top = (r == 0) ? false : true;
-                boolean right = (c == n - 1) ? false : true;
-                boolean bottom = (r == n - 1) ? false : true;
-                boolean left = (c == 0) ? false : true;
-
-                ArrayList<Integer> edgesArrayList = new ArrayList<Integer>();
-                if (top) {
-                    edgesArrayList.add(n * (r - 1) + c); // n * r + c
+                List<Integer> edgesArrayList = new ArrayList<>();
+                if (r != 0) {
+                    edgesArrayList.add(columns * (r - 1) + c);
                 }
-                if (right) {
-                    edgesArrayList.add(n * r + (c + 1));
+                if (c != columns - 1) {
+                    edgesArrayList.add(columns * r + (c + 1));
                 }
-                if (bottom) {
-                    edgesArrayList.add(n * (r + 1) + c);
+                if (r != rows - 1) {
+                    edgesArrayList.add(columns * (r + 1) + c);
                 }
-                if (left) {
-                    edgesArrayList.add(n * r + (c - 1));
+                if (c != 0) {
+                    edgesArrayList.add(columns * r + (c - 1));
                 }
-                V[counter].edges = new Integer[edgesArrayList.size()];
+                v.edges = new Integer[edgesArrayList.size()];
                 Collections.shuffle(edgesArrayList);
-                V[counter].edges = edgesArrayList.toArray(V[counter].edges);
-
-                counter++;
+                v.edges = edgesArrayList.toArray(v.edges);
             }
         }
     }
 
     public Graph negateGraph() {
-
-        int n = ( (Double) Math.sqrt(this.size) ).intValue();
-
-        Graph result = new Graph(n); // At this point the result graph has all possible edges
+        Graph result = new Graph(this.rows, this.columns);
 
         // Iterate over all vertices and negate the adjacency lists
-        for (int i = 0; i < result.size; i++) {
-
-            Integer[] oldEdges = this.V[i].edges;
+        for (int i = 0; i < result.V.length; i++) {
+            Set<Integer> oldEdges = new HashSet<>(Arrays.asList(this.V[i].edges));
 
             Integer[] newAdjacencyList = result.V[i].edges;
 
-            ArrayList<Integer> edgesToRemove = new ArrayList<Integer>();
+            List<Integer> edgesToRemove = new ArrayList<>();
             // Iterate over the current vertex adjacency list
-            for (int e = 0; e < newAdjacencyList.length; e++) {
+            for (Integer integer : newAdjacencyList) {
                 // If the original graph contains the current edge, delete it from the new graph
-                if (Arrays.asList(oldEdges).contains(newAdjacencyList[e])) {
-                    edgesToRemove.add(newAdjacencyList[e]);
+                if (oldEdges.contains(integer)) {
+                    edgesToRemove.add(integer);
                 }
             }
             // Remove the edges to remove from the new adjacency list
             for (int newE = 0; newE < edgesToRemove.size(); newE++) {
-                newAdjacencyList = MainActivity.removeValueFromArray(newAdjacencyList, edgesToRemove.get(newE));
+                newAdjacencyList = MainActivity.removeValueFromArray(newAdjacencyList,
+                    edgesToRemove.get(newE));
             }
 
             result.V[i].edges = newAdjacencyList;

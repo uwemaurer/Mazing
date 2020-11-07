@@ -18,7 +18,9 @@ package com.example.shif.mazing;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -40,19 +42,19 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 public class MainActivity extends AppCompatActivity {
 
     public enum Color {
-        WHITE, GRAY, BLACK;
+        WHITE, GRAY, BLACK
     }
+
     public MazeView mMazeView;
     public FingerLine mFingerLine;
-    static ImageView strawberry;
+    private ImageView strawberry;
     ImageView arrow;
-    public int mazeSize;
     public FingerLine line;
     public Toolbar mazingToolBar;
     DisplayMetrics displaymetrics = new DisplayMetrics();
     FrameLayout mFrameLayout;
-    public final int PADDING = 64;
-    public final int FAT_FINGERS_MARGIN = 25;
+    public static final int FAT_FINGERS_MARGIN = 25;
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -68,27 +70,22 @@ public class MainActivity extends AppCompatActivity {
 
         this.getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
 
-        mazingToolBar = (Toolbar) findViewById(R.id.mazing_toolbar);
+        mazingToolBar = findViewById(R.id.mazing_toolbar);
         setSupportActionBar(mazingToolBar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        TextView mToolBarText=(TextView)findViewById(R.id.toolbar_title);
-        Typeface typeFace=Typeface.createFromAsset(getAssets(), "fonts/Schoolbell.ttf");
+        TextView mToolBarText = findViewById(R.id.toolbar_title);
+        Typeface typeFace = Typeface.createFromAsset(getAssets(), "fonts/Schoolbell.ttf");
         mToolBarText.setTypeface(typeFace);
 
-        mFrameLayout = (FrameLayout)findViewById(R.id.mazeWrapper);
+        mFrameLayout = findViewById(R.id.mazeWrapper);
         ViewGroup.LayoutParams params = mFrameLayout.getLayoutParams();
         params.height = (int) Math.floor(displaymetrics.heightPixels * 0.7);
         mFrameLayout.setLayoutParams(params);
 
-        FloatingActionButton newMazeButton = (FloatingActionButton) findViewById(R.id.newMazeButton);
-        newMazeButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                createMaze();
-            }
-        });
+        FloatingActionButton newMazeButton = findViewById(R.id.newMazeButton);
+        newMazeButton.setOnClickListener(v -> createMaze());
         newMazeButton.performClick();
-
     }
 
     public void createMaze() {
@@ -99,58 +96,32 @@ public class MainActivity extends AppCompatActivity {
         if (mFingerLine != null) {
             ((ViewGroup) mFingerLine.getParent()).removeView(mFingerLine);
         }
-        mazeSize = 10;
-        mMazeView = new MazeView(this, mazeSize);
-
-        // Trace the path from start to farthestVertex using the line of predecessors,
-        // apply this information to form an array of rectangles
-        // which will be passed on to fingerLine view
-        // where the line has to pass.
-        // The array be checked against the drawn line in FingerLine.
-
-        int[][] solutionAreas = new int[mMazeView.lengthOfSolutionPath][4];
-
-        int currentVertexKey;
-        int totalMazeWidth = displaymetrics.widthPixels - PADDING;
-        // int totalMazeHeight = totalMazeWidth;
-        int cellSide = totalMazeWidth / mazeSize;
-        int row, column;
-        int topLeftX, topLeftY, bottomRightX, bottomRightY;
-
-        for (int i = 0; i < mMazeView.lengthOfSolutionPath; i++) {
-
-            currentVertexKey = mMazeView.listOfSolutionVertecesKeys[i];
-
-            // Translate vertex key to location on screen
-            row = (currentVertexKey) / mazeSize;
-            column = (currentVertexKey) % mazeSize;
-            topLeftX = (PADDING / 2) + (column * cellSide) - FAT_FINGERS_MARGIN;
-            topLeftY = (PADDING / 2) + (row * cellSide) - FAT_FINGERS_MARGIN;
-
-            bottomRightX = (PADDING / 2) + ((column + 1) * cellSide) + FAT_FINGERS_MARGIN;
-            bottomRightY = (PADDING / 2) + ((row + 1) * cellSide) + FAT_FINGERS_MARGIN;
-            solutionAreas[i] = new int[]{ topLeftX, topLeftY, bottomRightX, bottomRightY };
-        }
+        int rows = 4;
+        int columns = 4;
+        mMazeView = new MazeView(this, rows, columns);
+        List<Rect> solutionAreas = mMazeView.getSolutionAreas();
 
         mFrameLayout.addView(mMazeView);
         mFingerLine = new FingerLine(this, null, solutionAreas);
         mFrameLayout.addView(mFingerLine);
 
         // Add start arrow pic
-        int startCellArrowX = solutionAreas[mMazeView.lengthOfSolutionPath - 1][0] + 12 + FAT_FINGERS_MARGIN;
-        int startCellArrowY = solutionAreas[mMazeView.lengthOfSolutionPath - 1][1] + 100 + FAT_FINGERS_MARGIN;
-        arrow = (ImageView) findViewById(R.id.arrow);
+        int startCellArrowX =
+            solutionAreas.get(mMazeView.solutionVerticesKeys.size() - 1).left + 12 + FAT_FINGERS_MARGIN;
+        int startCellArrowY =
+            solutionAreas.get(mMazeView.solutionVerticesKeys.size() - 1).top + 100 + FAT_FINGERS_MARGIN;
+        arrow = findViewById(R.id.arrow);
         arrow.setX(startCellArrowX);
         arrow.setY(startCellArrowY);
         arrow.setVisibility(View.VISIBLE);
 
         // Add strawberry pic
-        int endCellStrawberryX = solutionAreas[0][0] + 8 + FAT_FINGERS_MARGIN;
-        int endCellStrawberryY = solutionAreas[0][1] + 10 + FAT_FINGERS_MARGIN;
-        strawberry = (ImageView) findViewById(R.id.strawberry);
+        int endCellStrawberryX = solutionAreas.get(0).left + 8 + FAT_FINGERS_MARGIN;
+        int endCellStrawberryY = solutionAreas.get(0).top + 10 + FAT_FINGERS_MARGIN;
+        strawberry = findViewById(R.id.strawberry);
         strawberry.setX(endCellStrawberryX);
         strawberry.setY(endCellStrawberryY);
-        strawberry.setVisibility(View.VISIBLE);;
+        strawberry.setVisibility(View.VISIBLE);
     }
 
 
@@ -158,8 +129,8 @@ public class MainActivity extends AppCompatActivity {
     // and return a new Integer array without the specified value
     public static Integer[] removeValueFromArray(Integer[] array, Integer value) {
 
-        ArrayList<Integer> arrayList = new ArrayList<Integer>(Arrays.asList(array));
-        arrayList.remove(arrayList.indexOf(value));
+        ArrayList<Integer> arrayList = new ArrayList<>(Arrays.asList(array));
+        arrayList.remove(value);
 
         Integer[] newArray = new Integer[arrayList.size()];
         arrayList.toArray(newArray);
@@ -167,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
         return newArray;
     }
 
-    public static void startGameSolvedAnimation() {
+    public void startGameSolvedAnimation() {
         final Animation animation = new AlphaAnimation(1, 0);
         animation.setDuration(700);
         animation.setInterpolator(new LinearInterpolator());
@@ -178,16 +149,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_level:
-                // User chose the "Level" item, show the level settings UI...
-                return true;
-
-            default:
-                // If we got here, the user's action was not recognized.
-                // Invoke the superclass to handle it.
-                return super.onOptionsItemSelected(item);
-
-        }
+        if (item.getItemId() == R.id.action_level) {
+            // User chose the "Level" item, show the level settings UI...
+            return true;
+        }// If we got here, the user's action was not recognized.
+        // Invoke the superclass to handle it.
+        return super.onOptionsItemSelected(item);
     }
 }
