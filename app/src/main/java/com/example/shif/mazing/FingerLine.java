@@ -21,12 +21,14 @@ import androidx.core.content.ContextCompat;
  * View of the line the user draws with their finger.
  */
 public class FingerLine extends View {
+    private MazeView mazeView;
     private Paint mPaint, debugPaint;
     private Path mPath;
     private List<Rect> solutionPath;
     int solutionCellsVisited;
-    private ArrayList<Boolean> solved;
+    private List<Boolean> solved;
     private boolean solvedMaze;
+    private int lastRow = -1, lastColumn = -1;
 
     public FingerLine(Context context) {
         this(context, null);
@@ -38,9 +40,10 @@ public class FingerLine extends View {
         init();
     }
 
-    public FingerLine(Context context, AttributeSet attrs, List<Rect> solutionPath) {
+    public FingerLine(Context context, AttributeSet attrs, List<Rect> solutionPath,  MazeView mazeView) {
         super(context, attrs);
         this.solutionPath = solutionPath;
+        this.mazeView = mazeView;
         init();
     }
 
@@ -85,12 +88,34 @@ public class FingerLine extends View {
 
     @Override
     public boolean onTouchEvent(@NonNull MotionEvent event) {
+        int x = (int) event.getX();
+        int y = (int) event.getY();
+        int row =  mazeView.getRowFromCoordinate(y);
+        int column =  mazeView.getColumnFromCoordinate(x);
+        if (mazeView != null) {
+            //Log.i("finger", " " +row + " " + column + " " + lastRow + " " + lastColumn + " " + mazeView.canConnect(row, column, lastRow,lastColumn));
+        }
+        if (row == -1 || column == -1) {
+            return true;
+        }
         switch (event.getAction()) {
         case MotionEvent.ACTION_DOWN:
-            mPath.moveTo(event.getX(), event.getY());
+            if (lastRow == -1 && lastColumn == -1) {
+                lastRow = row;
+                lastColumn = column;
+                mPath.moveTo(event.getX(), event.getY());
+            } else if(mazeView.canConnect(row, column, lastRow, lastColumn)) {
+                mPath.lineTo(event.getX(), event.getY());
+                lastRow = row;
+                lastColumn = column;
+            }
             return true;
         case MotionEvent.ACTION_MOVE:
-            mPath.lineTo(event.getX(), event.getY());
+            if(mazeView.canConnect(row, column, lastRow, lastColumn)) {
+                mPath.lineTo(event.getX(), event.getY());
+                lastRow = row;
+                lastColumn = column;
+            }
             break;
         case MotionEvent.ACTION_UP:
             break;
@@ -100,8 +125,7 @@ public class FingerLine extends View {
         // Schedule a repaint
         invalidate();
         // Check if user solved the maze
-        int x = (int) event.getX();
-        int y = (int) event.getY();
+
         for (int i = 0; i < solutionPath.size(); i++) {
             if (solutionPath.get(i).contains(x, y)) {
                 solved.set(i, true);
@@ -114,6 +138,8 @@ public class FingerLine extends View {
                 }
             }
         }
+
+
         return true;
     }
 }

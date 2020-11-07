@@ -71,20 +71,20 @@ public class MazeView extends View {
         horizontalLines = new boolean[rows + 1][columns];
 
         for (boolean[] verticalLine : verticalLines) {
-            Arrays.fill(verticalLine, Boolean.TRUE);
+            Arrays.fill(verticalLine, true);
         }
         for (boolean[] horizontalLine : horizontalLines) {
-            Arrays.fill(horizontalLine, Boolean.TRUE);
+            Arrays.fill(horizontalLine, true);
         }
         // Break the starting wall of the maze
         horizontalLines[rows][0] = false;
 
         // The maze starts at the left-bottom corner of the screen
-        int graphStartKey = columns * (rows - 1);
-        // Declare the first cell of the maze as visited
-        graph.V[graphStartKey].visited = true;
 
-        MazeBuilder.carveWay(graph, graph.V[graphStartKey], this);
+        // Declare the first cell of the maze as visited
+        Vertex start = graph.getVertex(rows - 1, 0);
+        start.visited = true;
+        MazeBuilder.carveWay(graph, start, this);
 
         // Improvement of the maze: remove a few random walls
         // to make the maze more confusing.
@@ -93,13 +93,13 @@ public class MazeView extends View {
         for (int holes = 0; holes < Math.floor(
             Math.pow(fractionOfWallsToRemove * (rows + columns) * 0.5f, 2)); holes++) {
 
-            int randomXvertical = rand.nextInt(rows);
-            int randomYvertical = rand.nextInt(columns - 1) + 1;
-            verticalLines[randomXvertical][randomYvertical] = false;
+            int rowVertical = rand.nextInt(rows);
+            int columnVertical = rand.nextInt(columns - 1) + 1;
+            verticalLines[rowVertical][columnVertical] = false;
 
-            int randomXhorizontal = rand.nextInt(rows - 1) + 1;
-            int randomYhorizontal = rand.nextInt(columns);
-            horizontalLines[randomXhorizontal][randomYhorizontal] = false;
+            int rowHorizontal = rand.nextInt(rows - 1) + 1;
+            int columnHorizontal = rand.nextInt(columns);
+            horizontalLines[rowHorizontal][columnHorizontal] = false;
         }
 
         MazeBuilder.removeEdges(this);
@@ -108,21 +108,22 @@ public class MazeView extends View {
 
         // Break the ending wall of the maze
         // get the end vertex key
-        int endKey = solutionVerticesKeys.get(0);
+
+        Vertex endVertex = graph.getVertex(solutionVerticesKeys.get(0));
 
         // check if it's vertical or horizontal
-        boolean horizontalEnd = endKey < columns || endKey >= columns * (rows - 1);
+        boolean horizontalEnd = endVertex.row == 0 || endVertex.row == (rows - 1);
         if (horizontalEnd) {
-            if (endKey < columns) { // top row of horizontal lines
-                horizontalLines[0][endKey] = false;
+            if (endVertex.row ==0) { // top row of horizontal lines
+                horizontalLines[0][endVertex.column] = false;
             } else { // bottom row of horizontal lines
-                horizontalLines[rows][endKey % columns] = false;
+                horizontalLines[rows][endVertex.column] = false;
             }
         } else {
-            if (endKey % columns == 0) { // left most column of vertical lines
-                verticalLines[endKey / columns][0] = false;
+            if (endVertex.column == 0) { // left most column of vertical lines
+                verticalLines[endVertex.row][0] = false;
             } else { // right most column of vertical lines
-                verticalLines[endKey / columns][columns] = false;
+                verticalLines[endVertex.row][columns] = false;
             }
         }
     }
@@ -160,9 +161,10 @@ public class MazeView extends View {
         List<Rect> solutionAreas = new ArrayList<>();
 
         for (int currentVertexKey : solutionVerticesKeys) {
+            Vertex vertex = graph.getVertex(currentVertexKey);
             // Translate vertex key to location on screen
-            int row = (currentVertexKey) / columns;
-            int column = (currentVertexKey) % columns;
+            int row = vertex.row;
+            int column = vertex.column;
             int left = padding + (column * cellWidth) - FAT_FINGERS_MARGIN;
             int top = padding + (row * cellHeight) - FAT_FINGERS_MARGIN;
 
@@ -171,5 +173,38 @@ public class MazeView extends View {
             solutionAreas.add(new Rect(left, top, right, bottom));
         }
         return solutionAreas;
+    }
+
+    public int getColumnFromCoordinate(int x) {
+        int column =  (x - padding) / cellWidth;
+        return column >= 0 && column < graph.columns ? column : -1;
+    }
+
+    public int getRowFromCoordinate(int y) {
+        int row =  (y - padding) / cellHeight;
+        return row >= 0 && row < graph.rows ? row : -1;
+    }
+
+    public boolean canConnect(int row1, int column1, int row2, int column2) {
+        if (row1 <0 || row2 < 0 || column1 <0 || column2<0) {
+            return false;
+        }
+        if (row1 == row2) {
+            if (column1 == column2) {
+                return true;
+            }
+            int c1 = Math.min(column1, column2);
+            int c2 = Math.max(column1, column2);
+            if (c2 == c1 + 1) {
+                return !verticalLines[row1][c1 + 1];
+            }
+        } else if (column1 == column2) {
+            int r1 = Math.min(row1, row2);
+            int r2 = Math.max(row1, row2);
+            if (r2 == r1 + 1) {
+                return !horizontalLines[r1 + 1][column1];
+            }
+        }
+        return false;
     }
 }

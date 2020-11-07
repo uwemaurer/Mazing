@@ -18,37 +18,33 @@ public class LongestPathFinder {
 
     public static List<Integer> findLongestPath(Graph graph) {
         Graph transposedGraph = graph.negateGraph();
-        List<Integer> result = new ArrayList<>();
+
         int rows = graph.rows;
         int columns = graph.columns;
+
+        // To start from the top left corner, choose index 0
         int startIndex = columns * (rows - 1);
-        Vertex start =
-            transposedGraph.V[startIndex]; // To start from the top left corner, choose index 0
+        Vertex start = transposedGraph.getVertex(startIndex);
 
         int maxDistance = 0;
 
         Vertex farthestVertex = start;
         start.setColor(MainActivity.Color.GRAY);
         start.setDistance(0);
-        // Create an empty queue Q
-        Queue<Vertex> Q = new LinkedList<>();
-        // insert start to Q
-        Q.add(start);
-
-        while (!Q.isEmpty()) {
-            Vertex vertex = Q.remove();
-
-            for (int i = 0; i < vertex.edges.length; i++) {
-
-                int vertexIndex = vertex.edges[i];
-                Vertex transposedV = transposedGraph.V[vertexIndex];
+        Queue<Vertex> queue = new LinkedList<>();
+        // insert start to queue
+        queue.add(start);
+        while (!queue.isEmpty()) {
+            Vertex vertex = queue.remove();
+            for (int vertexIndex : vertex.edges) {
+                Vertex transposedV = transposedGraph.getVertex(vertexIndex);
 
                 if (transposedV.color == MainActivity.Color.WHITE) {
                     transposedV.setColor(MainActivity.Color.GRAY);
                     transposedV.setDistance(vertex.distance + 1);
-                    boolean isOuter =
-                        ((vertexIndex + 1) % columns < 2 || vertexIndex < rows || vertexIndex > (
-                            columns * (rows - 1) - 1));
+                    boolean isOuter = transposedV.column == 0 || transposedV.column == columns - 1
+                        || transposedV.row == 0 && transposedV.row == rows - 1;
+
                     boolean isStart = transposedV.equals(start);
 
                     if (transposedV.distance > maxDistance && isOuter && !isStart) {
@@ -56,13 +52,15 @@ public class LongestPathFinder {
                         farthestVertex = transposedV;
                     }
                     transposedV.setPrevious(vertex);
-                    Q.add(transposedV);
+                    queue.add(transposedV);
                 }
             }
             vertex.setColor(MainActivity.Color.BLACK);
         }
         // Retrieve a list of vertices keys
         Vertex currVertex = farthestVertex;
+
+        List<Integer> result = new ArrayList<>();
         result.add(currVertex.key);
         while (currVertex.previous != null) {
             currVertex = currVertex.previous;

@@ -16,8 +16,6 @@
 
 package com.example.shif.mazing;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import android.graphics.Rect;
@@ -96,13 +94,13 @@ public class MainActivity extends AppCompatActivity {
         if (mFingerLine != null) {
             ((ViewGroup) mFingerLine.getParent()).removeView(mFingerLine);
         }
-        int rows = 4;
-        int columns = 4;
+        int rows = 5;
+        int columns = 6;
         mMazeView = new MazeView(this, rows, columns);
         List<Rect> solutionAreas = mMazeView.getSolutionAreas();
 
         mFrameLayout.addView(mMazeView);
-        mFingerLine = new FingerLine(this, null, solutionAreas);
+        mFingerLine = new FingerLine(this, null, solutionAreas, mMazeView);
         mFrameLayout.addView(mFingerLine);
 
         // Add start arrow pic
@@ -122,20 +120,6 @@ public class MainActivity extends AppCompatActivity {
         strawberry.setX(endCellStrawberryX);
         strawberry.setY(endCellStrawberryY);
         strawberry.setVisibility(View.VISIBLE);
-    }
-
-
-    // Function to remove a specific Integer from Integer array
-    // and return a new Integer array without the specified value
-    public static Integer[] removeValueFromArray(Integer[] array, Integer value) {
-
-        ArrayList<Integer> arrayList = new ArrayList<>(Arrays.asList(array));
-        arrayList.remove(value);
-
-        Integer[] newArray = new Integer[arrayList.size()];
-        arrayList.toArray(newArray);
-
-        return newArray;
     }
 
     public void startGameSolvedAnimation() {
