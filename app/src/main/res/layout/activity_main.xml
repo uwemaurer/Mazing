@@ -9,7 +9,7 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <android.support.v7.widget.Toolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/mazing_toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
@@ -30,7 +30,7 @@
             android:textSize="40sp"
             android:textStyle="bold" />
 
-    </android.support.v7.widget.Toolbar>
+    </androidx.appcompat.widget.Toolbar>
 
         <FrameLayout
             android:id="@+id/mazeWrapper"
@@ -75,7 +75,7 @@
             android:onClick="createMaze"
             -->
 
-        <android.support.design.widget.FloatingActionButton
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/newMazeButton"
             android:layout_width="72dp"
             android:layout_height="72dp"

@@ -1,18 +1,18 @@
 package com.example.shif.mazing;
 
+import java.util.ArrayList;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Path;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
-
-import java.util.ArrayList;
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 /**
  * View of the line the user draws with their finger.
